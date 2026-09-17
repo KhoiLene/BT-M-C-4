@@ -1,0 +1,288 @@
+HNG DN AJAX VI RESTFUL API TRONG SPRING BOOT
+1. THÊM TH VIN AJAX: M TRANG LAYOUT WEB (admin.jsp, web.jsp) thêm 02 lnh này vào th
+<head> phiên bn ajax tùy thuc vào template bootstrap ang s dng
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script> <script>var contextPath = "${pageContext.request.contextPath}"</script>
+Ví d: trang admin.jsp s dng bootstrap 5
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ include file="/common/taglib.jsp"%> <!DOCTYPE html> <html> <head> <!-- Required meta tags --> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Bootstrap CSS --> <link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap .min.css" rel="stylesheet" integrity="sha384EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0beta2/css/all.min.css" integrity="sha512YWzhKL2whUzgiheMoBFwW8CKV4qpHQAEuvilg9FAn5VJUDwKZZxkJNuGM4XkWuk94WCrrwslk8yWNGmY1EduT A==" crossorigin="anonymous" referrerpolicy="no-referrer" /> <link rel="stylesheet" href="/css/mystyles.css" /> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fontawesome/6.1.1/css/all.min.css" integrity="sha512KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0 g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script> <script>var contextPath = "${pageContext.request.contextPath}"</script> <title>Index</title> </head> <body>
+<header class ="row"> <div class="col"> <%@include file="/common/admin/header.jsp" %> </div>
+</header> <main class="container-fluid">
+<!-- <nav class ="row"> <div class="col"> <div></div> </div>
+</nav> --> <div class="row mt-4"> <div class="col mt-5 mb-5">
+
+<sitemesh:write property='body'></sitemesh:write>
+</div> </div>
+</main> <footer class="row">
+<div class="col"> <%@include file="/common/admin/footer.jsp" %>
+</div> </footer>
+
+<script
+src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min .js"
+integrity="sha384MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+crossorigin="anonymous"></script>
+</body> </html>
+
+2. Controller API
+package vn.iotstar.controllers.api;
+
+import java.util.Optional; import java.util.UUID;
+
+import import import import import import import import import import import import
+
+org.springframework.beans.factory.annotation.Autowired; org.springframework.http.HttpStatus; org.springframework.http.ResponseEntity; org.springframework.validation.annotation.Validated; org.springframework.web.bind.annotation.DeleteMapping; org.springframework.web.bind.annotation.GetMapping; org.springframework.web.bind.annotation.PostMapping; org.springframework.web.bind.annotation.PutMapping; org.springframework.web.bind.annotation.RequestMapping; org.springframework.web.bind.annotation.RequestParam; org.springframework.web.bind.annotation.RestController; org.springframework.web.multipart.MultipartFile;
+
+import vn.iotstar.entity.Category; import vn.iotstar.model.Response; import vn.iotstar.service.ICategoryService; import vn.iotstar.service.IStorageService;
+
+@RestController @RequestMapping(path = "/api/category") public class CategoryAPIController {
+
+@Autowired private ICategoryService categoryService;
+
+@Autowired IStorageService storageService;
+
+@GetMapping public ResponseEntity<?> getAllCategory() {
+return ResponseEntity.ok().body(categoryService.findAll()); //return new ResponseEntity<Response>(new Response(true, "Thành công",categoryService.findAll()), HttpStatus.OK); }
+
+@PostMapping(path = "/getCategory") public ResponseEntity<?> getCategory(@Validated @RequestParam("id") Long id) {
+Optional<Category> category = categoryService.findById(id);
+
+if (category.isPresent()) { // return ResponseEntity.ok().body(category.get()); return new ResponseEntity<Response>(new Response(true, "Thành
+công", category.get()), HttpStatus.OK); } else { // return ResponseEntity.notFound().build(); return new ResponseEntity<Response>(new Response(false, "Tht
+bi", null), HttpStatus.NOT_FOUND); }
+}
+
+@PostMapping(path = "/addCategory") public ResponseEntity<?> addCategory(@Validated @RequestParam("categoryName") String categoryName,
+@Validated @RequestParam("icon") MultipartFile icon) { Optional<Category> optCategory = categoryService.findByCategoryName(categoryName);
+
+if (optCategory.isPresent()) { return
+ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Category ã tn ti trong h thng");
+// return new ResponseEntity<Response>(new Response(false, "Loi sn phm này ã
+// tn ti trong h thng", optCategory.get()), HttpStatus.BAD_REQUEST);
+} else { Category category = new Category(); // kim tra tn ti file, lu file if (!icon.isEmpty()) { UUID uuid = UUID.randomUUID(); String uuString = uuid.toString(); // lu file vào trng Images category.setIcon(storageService.getSorageFilename(icon,
+uuString)); storageService.store(icon, category.getIcon());
+}
+
+category.setCategoryName(categoryName);
+
+Thành }
+
+công", }
+
+categoryService.save(category); // return ResponseEntity.ok().body(category); return new ResponseEntity<Response>(new Response(true, category), HttpStatus.OK);
+
+"Thêm
+
+@PutMapping(path = "/updateCategory") public ResponseEntity<?> updateCategory(@Validated @RequestParam("categoryId") Long categoryId,
+@Validated @RequestParam("categoryName") String categoryName, @Validated @RequestParam("icon") MultipartFile icon) { Optional<Category> optCategory = categoryService.findById(categoryId);
+
+if (optCategory.isEmpty()) { return new ResponseEntity<Response>(new Response(false, "Không
+tìm thy Category", null), HttpStatus.BAD_REQUEST);
+} else if (optCategory.isPresent()) {
+
+// kim tra tn ti file, lu file if (!icon.isEmpty()) {
+UUID uuid = UUID.randomUUID(); String uuString = uuid.toString(); // lu file vào trng Images
+
+optCategory.get().setIcon(storageService.getSorageFilename(icon, uuString)); storageService.store(icon, optCategory.get().getIcon());
+}
+
+Thành }
+
+optCategory.get().setCategoryName(categoryName); categoryService.save(optCategory.get()); // return ResponseEntity.ok().body(category); return new ResponseEntity<Response>(new Response(true, công", optCategory.get()),
+HttpStatus.OK); } return null;
+
+"Cp
+
+nht
+
+@DeleteMapping(path = "/deleteCategory") public ResponseEntity<?> deleteCategory(@Validated @RequestParam("categoryId") Long categoryId) {
+Optional<Category> optCategory = categoryService.findById(categoryId); if (optCategory.isEmpty()) {
+return new ResponseEntity<Response>(new Response(false, "Không tìm thy Category", null),
+HttpStatus.BAD_REQUEST); } else if (optCategory.isPresent()) {
+categoryService.delete(optCategory.get()); return ResponseEntity.ok().body(optCategory.get());
+//return new ResponseEntity<Response>(new Response(true, "Xóa Thành công", optCategory.get()), HttpStatus.OK);
+}
+
+return null;
+
+} } package vn.iotstar.controllers.api;
+
+import java.sql.Timestamp; import java.util.Date;
+
+import java.util.Optional; import java.util.UUID;
+
+import org.springframework.beans.BeanUtils; import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.http.HttpStatus; import org.springframework.http.ResponseEntity;
+
+import import import import import import import
+
+org.springframework.validation.annotation.Validated; org.springframework.web.bind.annotation.GetMapping; org.springframework.web.bind.annotation.PostMapping; org.springframework.web.bind.annotation.RequestMapping; org.springframework.web.bind.annotation.RequestParam; org.springframework.web.bind.annotation.RestController; org.springframework.web.multipart.MultipartFile;
+
+import vn.iotstar.entity.Category; import vn.iotstar.entity.Product; import vn.iotstar.model.ProductModel; import vn.iotstar.model.Response;
+
+import vn.iotstar.service.ICategoryService; import vn.iotstar.service.IProductService; import vn.iotstar.service.IStorageService;
+
+@RestController @RequestMapping(path = "/api/product") public class ProductApiController {
+
+@Autowired IProductService productService; @Autowired ICategoryService categoryService;
+
+@Autowired IStorageService storageService;
+
+@GetMapping public ResponseEntity<?> getAllProduct() {
+return new ResponseEntity<Response>(new productService.findAll()),
+HttpStatus.OK); }
+
+Response(true,
+
+"Thành
+
+công",
+
+@PostMapping(path = "/addProduct") public ResponseEntity<?> saveOrUpdate(
+@Validated @RequestParam("productName") String productName, @RequestParam("imageFile") MultipartFile productImages, //@RequestParam("images") String images, @Validated @RequestParam("unitPrice") Double productPrice, @Validated @RequestParam("discount") Double promotionalPrice, @Validated @RequestParam("description") String productDescription, @Validated @RequestParam("categoryId") Long categoryId, @Validated @RequestParam("quantity") Integer quantity, @Validated @RequestParam("status") Short status) { Optional<Product> optProduct = productService.findByProductName(productName);
+
+if (optProduct.isPresent()) {
+
+// return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Sn phm này ã
+// tn ti trong h thng"); return new ResponseEntity<Response>(
+new Response(false, "Sn phm này ã tn ti trong h thng", optProduct.get()),
+HttpStatus.BAD_REQUEST); } else {
+Product product = new Product(); Timestamp timestamp = new Timestamp(new Date(System.currentTimeMillis()).getTime());
+
+try {
+
+ProductModel proModel = new ProductModel(); //copy t Model sang Entity BeanUtils.copyProperties(proModel, product); //x lý category liên quan product Category cateEntity = new Category(); cateEntity.setCategoryId(proModel.getCategoryId()); product.setCategory(cateEntity); //kim tra tn ti file, lu file if(!proModel.getImageFile().isEmpty()) {
+UUID uuid = UUID.randomUUID(); String uuString = uuid.toString(); //lu file vào trng Images
+
+product.setImages(storageService.getSorageFilename(proModel.getImageFile(), uuString));
+storageService.store(proModel.getImageFile(), product.getImages());
+} product.setCreateDate(timestamp);
+
+productService.save(product); optProduct = productService.findByCreateDate(timestamp);
+
+} catch (Exception e) { e.printStackTrace();
+} // return ResponseEntity.ok().body(product); return new ResponseEntity<Response>(new Response(true, công", optProduct.get()),HttpStatus.OK); } }
+
+"Thành
+
+}
+
+3. Thêm trang jsp  hin danh sách Category, thêm category, xóa category, ví d ajax.jsp
+Hin th danh sách category bng API và Ajax
+<table class="table table-striped table-responsive"> <thead class="thead-inverse"> <tr> <th>Id</th> <th>icon</th>
+
+<th>Name</th> <th>Actions</th> </tr> </thead> </table>
+
+<script type="text/javascript"> /* Get category */ $(document).ready(function() { $.getJSON(contextPath + '/api/category', function(json) { var tr=[]; for (var i = 0; i < json.length; i++) { tr.push('<tr>'); tr.push('<td>' + json[i].categoryId + '</td>'); tr.push('<td>' + '<img
+src="/admin/categories/images/'+ json[i].icon + '" style="width:70px" class="imgfluid" alt=""></td>');
+tr.push('<td>' + json[i].categoryName + '</td>'); tr.push('<td>' + '<a href="#" data-id="'+ json[i].categoryId+'" id="editcate" class="btn btn-outline-warning"><i class="fa faedit"></i></a>'
++ '<a href="#" data-id="'+ json[i].categoryId+'" id="categoryId" class="btn btn-outline-danger"><i class="fa fatrash"></i></a>');
+tr.push('</tr>'); } $('table').append($(tr.join(''))); });
+</script>
+==================
+
+Thêm category bng API và Ajax s dng Modal bootstrap
+<p><button class="btn btn-success ml-auto" onclick="showCreateNewCategoryModal()"><i class="fas fa-plus mr-2"></i>Thêm Category Ajax</button></p>
+
+<div class="modal" tabindex="-1" role="dialog" id="createCategoryModal"> <div class="modal-dialog" role="document"> <div class="modal-content"> <form id="addCategory" method="post" onsubmit="return false;"
+enctype="multipart/form-data"> <div class="modal-header"> <h5 class="modal-title">Add Category</h5> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">&times;</span> </button> </div> <div class="modal-body">
+
+Name</label> id="new_categoryname"
+
+<div class="form-group"> <label for="new_categoryname">Category
+<input type="text" class="form-control" name="categoryName">
+</div> <div class="form-group">
+<label for="new_icon">Icon</label>
+
+id="new_icon" name="icon"> primary btn-block">Add</button>
+
+<input type="file" class="form-control"
+</div> <div class="form-group row">
+<div class="col text-center"> <button type="submit" class="btn btn-
+</div> </div>
+
+</div> <div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-dismiss="modal">óng</button>
+</div> </form> </div>
+
+</div> </div> <script type="text/javascript">
+
+/* Add category */ $("form#addCategory").submit(function(e) {
+e.preventDefault(); var formData = new FormData(this);
+
+$.ajax({ url: contextPath + '/api/category/addCategory', type: 'POST', dataType: "json", data: formData, success: function (data) { location.reload(); }, cache: false, contentType: false, processData: false
+}); });
+
+function showCreateNewCategoryModal(){ $('#new_categoryname')[0].value = ''; $('#createCategoryModal').modal('show');
+}
+
+</script>
+
+======================
+
+Cp nht Category bng API và Ajax vi Modal
+
+<div
+
+class="modal" tabindex="-1" role="dialog" id="updateCategoryInfoModal"> <div class="modal-dialog" role="document"> <div class="modal-content"> <div class="modal-header"> <h5 class="modal-title">Update Category</h5> <button type="button" class="close" data-dismiss="modal"> <span aria-hidden="true">&times;</span> </button>
+
+</div> <div class="modal-body">
+<div class="card"> <div class="card-header"> <h5><i class="far fa-address-card mr-
+1"></i>Category</h5> </div> <div class="card-body pb-0"> <p id="updateCategoryInfoModalId"></p> <p id="updateCategoryInfoModalName"></p> <p id="updateCategoryInfoModalIcon"></p> </div>
+</div>
+<div class="card mt-2"> <div class="card-header"> <h5><i class="far fa-address-card mr-
+1"></i>Update Category</h5> </div> <div class="card-body pb-0"> <form id="updateCategory" method="post"
+onsubmit="return false;" enctype="multipart/form-data"> <div class="form-group"> <label
+for="categoryName">Category Name</label> <input type="text" class="form-
+control" id="categoryName_up" name="categoryName"> </div> <div class="form-group">
+<label for="new_icon">Icon</label> <input type="file" class="form-control" id="icon_up" name="icon"> </div>
+<input type="hidden" id="categoryId_up" name="categoryId">
+<div class="form-group row"> <div class="col text-center"> <button type="submit"
+class="btn btn-primary btn-block" >Cp nht</button> </div>
+</div> </form> </div> </div>
+</div> <div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-dismiss="modal">óng</button>
+</div> </div> </div> </div>
+
+<script type="text/javascript">
+
+/*
+
+Edit */
+
+function showEditCategoryModal(categoryId, categoryName, icon, btn){
+
+/* $("input[name=categoryActive][value=" + active + "]").prop('checked', true); */
+$('#updateCategoryInfoModalId')[0].innerText = "Category ID: " + categoryId;
+$('#updateCategoryInfoModalName')[0].innerText = "Category Name: " + categoryName;
+$('#updateCategoryInfoModalIcon')[0].innerText = 'Icon: ' + icon; /* $('#updateCategoryInfoModalActive')[0].innerText = 'Icon: ' + (active == 'true' ? 'ang cho phép bán' : 'ã vô hiu hóa'); */
+
+$('#categoryName_up')[0].value = categoryName; $('#categoryId_up')[0].value = categoryId;
+
+$('#updateCategoryInfoModal').modal('show'); }
+
+$("form#updateCategory").submit(function(e) { e.preventDefault(); var formData = new FormData(this);
+
+}); </script>
+
+$.ajax({ url: contextPath + '/api/category/updateCategory', type: 'PUT', dataType: "json", data: formData, success: function (data) { location.reload(); }, cache: false, contentType: false, processData: false
+});
+
+Xóa Category bng API và Ajax
+<a href="#" data-id="'+ json[i].categoryId+'" id="categoryId" class="btn btn-outlinedanger"><i class="fa fa-trash"></i></a> <script type="text/javascript">
+$(document).delegate('#categoryId', 'click', function() { var id = $(this).data('id'); if (confirm('Do you really want to delete record?')) { var parent = $(this).parent().parent(); $.ajax({ type: "DELETE", url: contextPath +
+'/api/category/deleteCategory?categoryId=' + id, dataType: "json", data:id, success: function() { parent.fadeOut('slow', function() { $(this).remove(); }); location.reload(true) }, error: function() {
+
+} });
+
+} });
+
+});
+</script>
+
+Bài tp thêm: Xây dng chc nng CRUD bng Products bng Ajax
+
+

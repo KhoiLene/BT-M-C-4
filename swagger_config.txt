@@ -1,0 +1,25 @@
+CU HÌNH SWAGGER2 VÀ SWAGGER 3 TRÊN SPRING BOOT
+
+1. CU HÌNH SWAGGER 2 TRÊN SPRING BOOT 2.7.17 Bc 1: Thêm th vin
+
+<!--
+
+swagger2 --> <dependency> <groupId>io.springfox</groupId> <artifactId>springfox-swagger2</artifactId> <version>2.9.2</version> </dependency>
+
+<dependency> <groupId>io.springfox</groupId> <artifactId>springfox-swagger-ui</artifactId> <version>2.9.2</version>
+</dependency>
+
+Bc 2: Cu hình Bean
+
+Bc 3: Tiêm Bean vào IOC Container M file .....application.java và thêm @EnableSwagger2 vào trên class
+Bc 4: Kt qu, chy project và gõ url : http://localhost:8188/swagger-ui.html
+
+2. CU HÌNH SWAGGER 3 TRÊN SPRING BOOT 3.1.5
+Bc 1: Thêm th vin
+<!-- swagger3 -->
+<dependency> <groupId>io.springfox</groupId> <artifactId>springfox-swagger-ui</artifactId> <version>3.0.0</version>
+</dependency> <dependency>
+<groupId>org.springdoc</groupId> <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId> <version>2.0.2</version> </dependency>
+Bc 2: Kt qu, chy project và gõ url: http://localhost:8082/swagger-ui/index.html
+
+
